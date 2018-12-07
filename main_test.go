@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/pkg/errors"
 	"reflect"
 	"testing"
 )
@@ -96,5 +97,74 @@ func TestRuleApplies(t *testing.T) {
 
 	if(!RuleApplies(testPropertyDoesNotExistRule, testNode)){
 		t.Errorf("Rule should apply as property does not exist, expected true, got false")
+	}
+
+	testNode.Type = "NotDotExpression"
+
+	if(RuleApplies(testPropertyDoesNotExistRule, testNode)){
+		t.Errorf("Rule should not apply as the test node is not a DotExpression, expected false, got true")
+	}
+}
+
+func TestCheckErr(t *testing.T) {
+	defer func(){
+		if r := recover(); r == nil{
+			t.Errorf("err was not nil, expected panic, no panic occurred")
+		}
+	}()
+
+	err := errors.New("test_error")
+
+	CheckErr(err)
+}
+
+func TestParseRules(t *testing.T) {
+	rules := ParseRules("test.json")
+	expectedResult := Rules{}
+	expectedResult.All = make([]Rule, 2)
+	expectedResult.All[0] = Rule{Type:"Expression", ID:"eval"}
+	expectedResult.All[0].Action = RuleAction{Type:"warn", Info:"Eval is a dangerous expression, please don't use it"}
+	expectedResult.All[1] = Rule{Type:"PropertyDoesNotExist"}
+	expectedResult.All[1].Action = RuleAction{Type:"fail", Info:"Script attempts to access property that does not exist"}
+
+	if(!reflect.DeepEqual(rules, expectedResult)){
+		t.Errorf("Rules were not properly parsed, expected %v, got %v", expectedResult, rules)
+	}
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Error should have been thrown as file does not exist, expected panic, no panic occurred")
+		}
+	}()
+
+	ParseRules("fileDoesNotExist")
+}
+
+func TestCreateVariableProp(t *testing.T) {
+	variables = make(map[string]Variable)
+	variables["test"] = Variable{Properties:make([]string, 1)}
+	pNode := Node{Children:make([]Node, 1), ID:"test_prop"}
+	pNode.Children[0] = Node{ID:"test"}
+	CreateVariableProp(pNode)
+	expectedResult := make(map[string]Variable)
+	expectedResult["test"] = Variable{Properties:[]string{"","test_prop"}}
+
+	if(!reflect.DeepEqual(variables, expectedResult)){
+		t.Errorf("Prop was not added to variable, expected %v, got %v", expectedResult, variables)
+	}
+
+	pNode.Children[0].ID = "var_does_not_exist"
+
+	CreateVariableProp(pNode)
+	if(!reflect.DeepEqual(variables, expectedResult)){
+		t.Errorf("Prop was added but variable doesn't exist, expected %v, got %v", expectedResult, variables)
+	}
+
+	pNode.Type = "ObjectProperty"
+	variables["test"] = Variable{Properties:make([]string, 1)}
+	lastVExpr = Node{ID:"test"}
+	CreateVariableProp(pNode)
+	if(!reflect.DeepEqual(variables, expectedResult)){
+		t.Errorf("Prop was not added to variable, expected %v, got %v", expectedResult, variables)
 	}
 }

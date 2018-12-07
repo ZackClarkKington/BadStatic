@@ -1,0 +1,17 @@
+[
+  {
+    "type": "Expression",
+    "id": "eval",
+    "action": {
+      "type": "warn",
+      "info": "Eval is a dangerous expression, please don't use it"
+    }
+  },
+  {
+    "type": "PropertyDoesNotExist",
+    "action": {
+      "type": "fail",
+      "info": "Script attempts to access property that does not exist"
+    }
+  }
+]

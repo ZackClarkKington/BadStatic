@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/pkg/errors"
+	"github.com/robertkrimen/otto/ast"
 	"reflect"
 	"testing"
 )
@@ -166,5 +167,15 @@ func TestCreateVariableProp(t *testing.T) {
 	CreateVariableProp(pNode)
 	if(!reflect.DeepEqual(variables, expectedResult)){
 		t.Errorf("Prop was not added to variable, expected %v, got %v", expectedResult, variables)
+	}
+}
+
+func TestWalk(t *testing.T) {
+	n := &ast.VariableStatement{List:make([]ast.Expression, 0)}
+	result := Walk(n)
+	expectedResult := Node{Type:"VariableStatement", Children: make([]Node, 0)}
+
+	if(!reflect.DeepEqual(result, expectedResult)){
+		t.Errorf("Walk did not produce the expected result, expected %v, got %v", expectedResult, result)
 	}
 }

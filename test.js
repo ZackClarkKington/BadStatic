@@ -14,4 +14,12 @@ if(typeof obj == 'object'){
     alert(obj.prop)
 }
 
-console.log(obj.test)
+console.log(obj.test);
+
+function named_function(){
+    var a = 1;
+    var b = 2;
+    var c = a + b;
+    var d = a + b;
+    return c + d;
+}

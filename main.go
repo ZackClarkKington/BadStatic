@@ -36,7 +36,14 @@ type Variable struct {
 	Properties []string
 }
 
+type BasicBlock struct {
+	Statements []Node
+	Parameters []Node
+}
+
 var nodes []Node
+var basicBlocks map[int]BasicBlock
+var numBlocks int = 0
 var rules Rules
 var variables map[string]Variable
 var lastVExpr Node = Node{}
@@ -49,6 +56,7 @@ func main() {
 	CheckErr(err)
 
 	nodes = make([]Node, len(program.Body))
+	basicBlocks = make(map[int]BasicBlock)
 	variables = make(map[string]Variable)
 	fmt.Println("Unknowns:")
 	for i := 0; i < len(program.Body); i++ {
@@ -69,6 +77,11 @@ func main() {
 
 	for i := 0; i < len(nodes); i++ {
 		CheckNode(nodes[i])
+	}
+
+	fmt.Println("Basic Blocks:")
+	for i := 0; i < len(basicBlocks); i++ {
+		fmt.Println(basicBlocks[i])
 	}
 }
 
@@ -274,15 +287,22 @@ func Walk(n interface{}) Node {
 			node.ID = v.Name.Name
 		}
 		node.Children = make([]Node, len(v.ParameterList.List) + len(v.DeclarationList))
+		basicBlocks[numBlocks] = BasicBlock{Parameters:make([]Node, len(v.ParameterList.List)), Statements:make([]Node, len(v.DeclarationList))}
 		var n int = 0
 		for i := 0; i < len(node.Children); i++ {
-			if i < len(node.Children) / 2 - 1 {
-				node.Children[i] = Walk(v.ParameterList.List[i])
+			if i < len(node.Children) / 2 - 1  && i < len(v.ParameterList.List){
+				paramNode := Walk(v.ParameterList.List[i])
+				node.Children[i] = paramNode
+				basicBlocks[numBlocks].Parameters[i] = paramNode
+
 			} else {
-				node.Children[i] = Walk(v.DeclarationList[n])
+				declNode := Walk(v.DeclarationList[n])
+				node.Children[i] = declNode
+				basicBlocks[numBlocks].Statements[n] = declNode
 				n++
 			}
 		}
+		numBlocks++
 		break
 	case reflect.TypeOf(&ast.VariableDeclaration{}):
 		v, _ := n.(*ast.VariableDeclaration)
@@ -350,6 +370,11 @@ func Walk(n interface{}) Node {
 		if node.Children[0].Type == "DotExpression" {
 			CreateVariableProp(node.Children[0])
 		}
+		break
+	case reflect.TypeOf(&ast.FunctionStatement{}):
+		v, _ := n.(*ast.FunctionStatement)
+		node = Node{Type:"FunctionStatement", Children:make([]Node, 1)}
+		node.Children[0] = Walk(v.Function)
 		break
 	default:
 		fmt.Println(reflect.TypeOf(n))

@@ -9,7 +9,7 @@ An example showing how to specify a set of rules for the analyzer to follow can 
 
 Rules have different types, the types currently implemented are:
 
--   **Expression**, for use in monitoring and addressing usage of a specific expression
+-   **Expression**, for use in monitoring and addressing usage of a specific expression (such as eval, as seen in test.js)
 -   **PropertyDoesNotExist**, for finding attempts to access undefined properties of an object
 
 Each rule should have an associated action.

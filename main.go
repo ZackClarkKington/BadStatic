@@ -254,8 +254,10 @@ func Walk(n interface{}) Node {
 	case reflect.TypeOf(&ast.DotExpression{}):
 		v, _ := n.(*ast.DotExpression)
 		node = Node{Type: "DotExpression", ID: v.Identifier.Name, Class: "Expression"}
-		node.Children = make([]Node, 1)
-		node.Children[0] = Walk(v.Left)
+		if v.Left != nil {
+			node.Children = make([]Node, 1)
+			node.Children[0] = Walk(v.Left)
+		}
 		break
 	case reflect.TypeOf(&ast.CallExpression{}):
 		v, _ := n.(*ast.CallExpression)

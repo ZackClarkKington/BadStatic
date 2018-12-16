@@ -170,12 +170,33 @@ func TestCreateVariableProp(t *testing.T) {
 	}
 }
 
+func UnexpectedResult(t *testing.T, result Node, expectedResult Node){
+	t.Errorf("Walk did not produce the expected result, expected %v, got %v", expectedResult, result)
+}
+
 func TestWalk(t *testing.T) {
 	n := &ast.VariableStatement{List:make([]ast.Expression, 0)}
 	result := Walk(n)
 	expectedResult := Node{Type:"VariableStatement", Children: make([]Node, 0)}
 
 	if(!reflect.DeepEqual(result, expectedResult)){
-		t.Errorf("Walk did not produce the expected result, expected %v, got %v", expectedResult, result)
+		UnexpectedResult(t, result, expectedResult)
+	}
+
+	dotTest:= &ast.DotExpression{Identifier: &ast.Identifier{Name:"test_id"}}
+	result = Walk(dotTest)
+	expectedResult = Node{Type: "DotExpression", ID:dotTest.Identifier.Name, Class:"Expression"}
+
+	if(!reflect.DeepEqual(result, expectedResult)){
+		UnexpectedResult(t, result, expectedResult)
+	}
+
+	dotTest = &ast.DotExpression{Identifier: &ast.Identifier{Name: "test_id"}, Left: &ast.Identifier{Name: "test_left"}}
+	result = Walk(dotTest)
+	expectedResult.Children = make([]Node, 1)
+	expectedResult.Children[0] = Node{Type:"Identifier", ID: dotTest.Left.(*ast.Identifier).Name}
+
+	if(!reflect.DeepEqual(result, expectedResult)){
+		UnexpectedResult(t, result, expectedResult)
 	}
 }

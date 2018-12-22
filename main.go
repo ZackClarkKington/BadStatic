@@ -41,6 +41,12 @@ type BasicBlock struct {
 	Parameters []Node
 }
 
+type DAGNode struct {
+	Parent *DAGNode
+	Left *DAGNode
+	Right *DAGNode
+	Labels []string
+}
 var nodes []Node
 var basicBlocks map[int]BasicBlock
 var numBlocks int = 0
@@ -83,6 +89,8 @@ func main() {
 	for i := 0; i < len(basicBlocks); i++ {
 		fmt.Println(basicBlocks[i])
 	}
+	fmt.Println("A basic block:")
+	ConstructDAG(basicBlocks[0])
 }
 
 // Apply action takes the corresponding action for a rule and executes it
@@ -383,4 +391,25 @@ func Walk(n interface{}) Node {
 		node = Node{Type: "Unknown"}
 	}
 	return node
+}
+
+func GetIDs(stmt Node) []string {
+	var toReturn []string = make([]string, 1)
+	toReturn[0] = stmt.ID
+	numChildren := len(stmt.Children)
+	if(numChildren > 0){
+
+		for i:=0; i < numChildren; i++ {
+			toReturn = MergeStrArrays(toReturn, GetIDs(stmt.Children[i]))
+		}
+	}
+
+	return toReturn
+}
+
+func ConstructDAG(block BasicBlock){
+	for i:=0; i < len(block.Statements); i++ {
+		fmt.Println(block.Statements[i])
+		fmt.Println(GetIDs(block.Statements[i]))
+	}
 }

@@ -10,7 +10,7 @@
   {
     "type": "PropertyDoesNotExist",
     "action": {
-      "type": "fail",
+      "type": "warn",
       "info": "Script attempts to access property that does not exist"
     }
   }

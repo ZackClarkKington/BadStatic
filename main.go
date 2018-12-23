@@ -6,6 +6,7 @@ import (
 	"github.com/robertkrimen/otto/ast"
 	"github.com/robertkrimen/otto/parser"
 	"io/ioutil"
+	"math"
 	"os"
 	"reflect"
 )
@@ -45,6 +46,7 @@ type DAGNode struct {
 	Parent *DAGNode
 	Left *DAGNode
 	Right *DAGNode
+	ID string
 	Labels []string
 }
 var nodes []Node
@@ -316,7 +318,7 @@ func Walk(n interface{}) Node {
 		break
 	case reflect.TypeOf(&ast.VariableDeclaration{}):
 		v, _ := n.(*ast.VariableDeclaration)
-		node = Node{Type: "VariableDeclaration"}
+		node = Node{Type: "VariableDeclaration", ID: "="}
 		node.Children = make([]Node, len(v.List))
 		for i := 0; i < len(v.List); i++ {
 			node.Children[i] = Walk(v.List[i])
@@ -407,9 +409,33 @@ func GetIDs(stmt Node) []string {
 	return toReturn
 }
 
+func ConstructDAGNode(identifiers []string) *DAGNode {
+	toReturn := DAGNode{}
+	toReturn.ID = identifiers[0]
+	return &toReturn
+}
+
 func ConstructDAG(block BasicBlock){
 	for i:=0; i < len(block.Statements); i++ {
-		fmt.Println(block.Statements[i])
-		fmt.Println(GetIDs(block.Statements[i]))
+		var identifiers []string = GetIDs(block.Statements[i])
+		var cIdentifiers []string = make([]string, 3)
+		d := float64(len(identifiers)) / float64(3)
+		numNodes := int(math.Ceil(d))
+		fmt.Println(numNodes)
+		for i:=0; i < numNodes; i++ {
+			cIdentifiers = identifiers[:3]
+			identifiers = identifiers[3:]
+
+			if(len(identifiers) == 2) {
+				identifiers = MergeStrArrays(cIdentifiers[2:], identifiers)
+			}
+			currentNode := DAGNode{ID:cIdentifiers[0], Left:ConstructDAGNode(cIdentifiers[1:]), Right:ConstructDAGNode(cIdentifiers[2:])}
+			currentNode.Left.Parent = &currentNode
+			currentNode.Right.Parent = &currentNode
+			fmt.Println(currentNode)
+			fmt.Println(*currentNode.Left)
+			fmt.Println(*currentNode.Right)
+
+		}
 	}
 }
